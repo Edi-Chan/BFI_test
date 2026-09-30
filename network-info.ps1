@@ -3,7 +3,7 @@ $adapter = Get-CimInstance Win32_NetworkAdapterConfiguration |
     Select-Object -First 1
 
 if (-not $adapter) {
-    Write-Host "Kein aktives Netzwerkinterface gefunden."
+    Write-Host "Kein aktives Netzwerkinterface gefunden." -ForegroundColor Red
     exit
 }
 
@@ -13,6 +13,12 @@ $gateway = $adapter.DefaultIPGateway
 $dns = $adapter.DNSServerSearchOrder
 $dhcp = if ($adapter.DHCPEnabled) { "Ja" } else { "Nein" }
 
+Write-Host "" 
+Write-Host "==================================================" -ForegroundColor Cyan
+Write-Host " Netzwerkinformationen des Computers " -ForegroundColor Yellow
+Write-Host "==================================================" -ForegroundColor Cyan
+Write-Host ""
+
 [pscustomobject]@{
     Hostname    = $env:COMPUTERNAME
     IP          = $ip
@@ -20,4 +26,16 @@ $dhcp = if ($adapter.DHCPEnabled) { "Ja" } else { "Nein" }
     Gateway     = if ($gateway) { ($gateway -join ", ") } else { "Keine" }
     DNS         = if ($dns) { ($dns -join ", ") } else { "Keine" }
     DHCP        = $dhcp
-} | Format-List
+} | ForEach-Object {
+    $color = if ($_.DHCP -eq "Ja") { "Green" } else { "Yellow" }
+
+    Write-Host ("Hostname:   " + $_.Hostname) -ForegroundColor Cyan
+    Write-Host ("IP:         " + $_.IP) -ForegroundColor White
+    Write-Host ("Subnet:     " + $_.Subnetmaske) -ForegroundColor White
+    Write-Host ("Gateway:    " + $_.Gateway) -ForegroundColor Magenta
+    Write-Host ("DNS:        " + $_.DNS) -ForegroundColor Blue
+    Write-Host ("DHCP:       " + $_.DHCP) -ForegroundColor $color
+}
+
+Write-Host ""
+Write-Host "==================================================" -ForegroundColor Cyan
